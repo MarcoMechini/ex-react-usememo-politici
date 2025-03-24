@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 
 const PoliticianCard = React.memo(({ pol }) => {
-  console.log(pol.name);
 
   return (
     <>
@@ -17,6 +16,12 @@ function App() {
 
   const [politici, setPolitici] = useState([])
   const [UInput, setUInput] = useState('')
+  const [positionFilter, setPositionFilter] = useState('')
+
+  const handleInputchange = (e) => {
+    setPositionFilter(e.target.value)
+    console.log(positionFilter);
+  }
 
   async function getPolitici() {
     try {
@@ -29,10 +34,27 @@ function App() {
   }
 
   const filteredPolitici = useMemo(() => {
+    const politiciFiltrati = politici.filter(p =>
+      (positionFilter !== '') ? p.position === positionFilter : p.position
+        &&
+        (p.name.toLowerCase().includes(UInput.toLowerCase()) ||
+          p.biography.toLowerCase().includes(UInput.toLowerCase()))
+    )
+    return politiciFiltrati
+  }, [politici, UInput, positionFilter])
 
-    // || p.biography.toLowerCase().includes(UInput.toLowerCase())
-    return politici.filter(p => p.name.toLowerCase().includes(UInput.toLowerCase()))
-  }, [politici, UInput])
+
+
+  //to do fare un array di position da mettere dentro il select
+  const politicPositionArr = useMemo(() => {
+    const posizioni = []
+    politici.map(el => {
+      if (!posizioni.includes(el.position)) {
+        posizioni.push(el.position)
+      }
+    })
+    return posizioni
+  }, [politici])
 
   useEffect(() => {
     getPolitici()
@@ -46,6 +68,15 @@ function App() {
         type="text"
         value={UInput}
         onChange={(e) => setUInput(e.target.value)} />
+      <select name="position" id="position"
+        onChange={handleInputchange}
+      >
+        <option key={0} value=''>Tutti</option>
+        {politicPositionArr && politicPositionArr.map((el, index) =>
+          <option key={index} value={el}>{el}</option>)
+        }
+
+      </select>
       <ul>
         {filteredPolitici.map(p => (
           <PoliticianCard key={p.id} pol={p} />
