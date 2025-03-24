@@ -20,12 +20,10 @@ function App() {
 
   const handleInputchange = (e) => {
     setPositionFilter(e.target.value)
-    console.log(positionFilter);
   }
 
   async function getPolitici() {
     try {
-      console.log('chiamata API');
       const fetchPolitici = await fetch(`https://www.freetestapi.com/api/v1/politicians`).then(obj => obj.json())
       setPolitici(fetchPolitici);
     } catch (error) {
@@ -34,11 +32,12 @@ function App() {
   }
 
   const filteredPolitici = useMemo(() => {
-    const politiciFiltrati = politici.filter(p =>
-      (positionFilter !== '') ? p.position === positionFilter : p.position
-        &&
-        (p.name.toLowerCase().includes(UInput.toLowerCase()) ||
-          p.biography.toLowerCase().includes(UInput.toLowerCase()))
+    const politiciFiltrati = politici.filter(p => {
+      const isInName = p.name.toLowerCase().includes(UInput.toLowerCase())
+      const isInBio = p.biography.toLowerCase().includes(UInput.toLowerCase())
+      const selectPosition = (positionFilter !== '') ? p.position === positionFilter : p.position
+      return selectPosition && (isInName || isInBio)
+    }
     )
     return politiciFiltrati
   }, [politici, UInput, positionFilter])
@@ -47,13 +46,12 @@ function App() {
 
   //to do fare un array di position da mettere dentro il select
   const politicPositionArr = useMemo(() => {
-    const posizioni = []
-    politici.map(el => {
-      if (!posizioni.includes(el.position)) {
-        posizioni.push(el.position)
+    return politici.reduce((acc, el) => {
+      if (!acc.includes(el.position)) {
+        return [...acc, el.position]
       }
-    })
-    return posizioni
+      return acc
+    }, [])
   }, [politici])
 
   useEffect(() => {
